@@ -1,0 +1,101 @@
+<!DOCTYPE html><html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Guilda - Jogadores</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: Arial, sans-serif; background:#0f172a; color:#e5e7eb; margin:0; }
+    header { padding:16px; background:#020617; border-bottom:1px solid #1f2937; }
+    main { padding:16px; display:grid; grid-template-columns: 280px 1fr; gap:16px; }
+    .card { background:#020617; border:1px solid #1f2937; border-radius:8px; padding:12px; }
+    ul { list-style:none; padding:0; margin:0; }
+    li { padding:8px; border-bottom:1px solid #1f2937; cursor:pointer; }
+    li:hover { background:#020617; }
+    .label { color:#94a3b8; font-size:12px; }
+    .value { margin-bottom:8px; }
+    .hidden { display:none; }
+    input, button { background:#020617; color:#e5e7eb; border:1px solid #1f2937; border-radius:6px; padding:8px; }
+    button { cursor:pointer; }
+    .row { display:flex; gap:8px; }
+  </style>
+</head>
+<body>
+<header>
+  <strong>Gestão da Guilda</strong>
+</header><main>
+  <section class="card">
+    <h3>Jogadores</h3>
+    <ul id="playerList"></ul>
+    <hr />
+    <h4>Adicionar jogador</h4>
+    <div class="row">
+      <input id="nick" placeholder="Nick" />
+      <button onclick="addPlayer()">Adicionar</button>
+    </div>
+  </section>  <section class="card">
+    <h3>Dados do Jogador</h3>
+    <div id="details" class="hidden">
+      <div class="label">Nick</div>
+      <div class="value" id="d_nick"></div>
+      <div class="label">Nome</div>
+      <div class="value" id="d_nome"></div>
+      <div class="label">WhatsApp</div>
+      <div class="value" id="d_zap"></div>
+      <div class="label">Função</div>
+      <div class="value" id="d_funcao"></div>
+      <button onclick="removePlayer()">Excluir jogador</button>
+    </div>
+    <div id="empty">Selecione um jogador.</div>
+  </section>
+</main><script>
+  // DADOS LOCAIS (APENAS DEMO). NÃO USE ISSO EM PRODUÇÃO.
+  let players = JSON.parse(localStorage.getItem('players') || '[]');
+  let selected = null;
+
+  function save() {
+    localStorage.setItem('players', JSON.stringify(players));
+  }
+
+  function renderList() {
+    const ul = document.getElementById('playerList');
+    ul.innerHTML = '';
+    players.forEach((p, i) => {
+      const li = document.createElement('li');
+      li.textContent = p.nick;
+      li.onclick = () => selectPlayer(i);
+      ul.appendChild(li);
+    });
+  }
+
+  function selectPlayer(i) {
+    selected = i;
+    const p = players[i];
+    document.getElementById('details').classList.remove('hidden');
+    document.getElementById('empty').style.display = 'none';
+    document.getElementById('d_nick').textContent = p.nick;
+    document.getElementById('d_nome').textContent = p.nome || '-';
+    document.getElementById('d_zap').textContent = p.zap || '-';
+    document.getElementById('d_funcao').textContent = p.funcao || '-';
+  }
+
+  function addPlayer() {
+    const nick = document.getElementById('nick').value.trim();
+    if (!nick) return alert('Nick obrigatório');
+    players.push({ nick, nome:'', zap:'', funcao:'' });
+    save(); renderList();
+    document.getElementById('nick').value='';
+  }
+
+  function removePlayer() {
+    if (selected === null) return;
+    if (!confirm('Excluir este jogador?')) return;
+    players.splice(selected,1);
+    selected = null;
+    save(); renderList();
+    document.getElementById('details').classList.add('hidden');
+    document.getElementById('empty').style.display = 'block';
+  }
+
+  renderList();
+</script></body>
+</html>
