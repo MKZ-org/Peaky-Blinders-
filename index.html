@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Guilda – Jogadores</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+    }
+    .container {
+      display: flex;
+      height: 100vh;
+    }
+    .sidebar {
+      width: 30%;
+      background: #1c1c1c;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    .sidebar h2 {
+      margin-top: 0;
+    }
+    .sidebar input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 5px;
+      box-sizing: border-box;
+    }
+    .sidebar button {
+      width: 100%;
+      padding: 8px;
+      cursor: pointer;
+    }
+    .player {
+      padding: 8px;
+      background: #2a2a2a;
+      margin-top: 5px;
+      cursor: pointer;
+    }
+    .player:hover {
+      background: #3a3a3a;
+    }
+    .content {
+      width: 70%;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .hidden {
+      display: none;
+    }
+    .label {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    .value {
+      width: 100%;
+      padding: 8px;
+      margin-top: 3px;
+      box-sizing: border-box;
+    }
+    .row {
+      margin-top: 15px;
+    }
+    .row button {
+      padding: 8px 15px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="sidebar">
+    <h2>Jogadores</h2>
+    <input id="nick" placeholder="Nick do jogador">
+    <button onclick="addPlayer()">Adicionar jogador</button>
+    <div id="list"></div>
+  </div>
+
+  <div class="content">
+    <div id="empty">Selecione um jogador.</div>
+
+    <div id="details" class="hidden">
+      <div class="label">Nick</div>
+      <input id="f_nick" class="value">
+
+      <div class="label">Nome</div>
+      <input id="f_nome" class="value">
+
+      <div class="label">Instagram</div>
+      <input id="f_insta" class="value">
+
+      <div class="label">WhatsApp</div>
+      <input id="f_zap" class="value">
+
+      <div class="label">ID</div>
+      <input id="f_id" class="value">
+
+      <div class="row">
+        <button onclick="savePlayer()">Salvar</button>
+        <button onclick="removePlayer()">Excluir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let players = JSON.parse(localStorage.getItem("players") || "[]");
+  let selected = null;
+
+  function renderList() {
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+    players.forEach((p, i) => {
+      const div = document.createElement("div");
+      div.className = "player";
+      div.textContent = p.nick;
+      div.onclick = () => selectPlayer(i);
+      list.appendChild(div);
+    });
+  }
+
+  function addPlayer() {
+    const nick = document.getElementById("nick").value.trim();
+    if (!nick) {
+      alert("Nick obrigatório");
+      return;
+    }
+    players.push({ nick, nome: "", insta: "", zap: "", id: "" });
+    document.getElementById("nick").value = "";
+    saveStorage();
+    renderList();
+  }
+
+  function selectPlayer(i) {
+    selected = i;
+    const p = players[i];
+    document.getElementById("details").classList.remove("hidden");
+    document.getElementById("empty").style.display = "none";
+
+    document.getElementById("f_nick").value = p.nick || "";
+    document.getElementById("f_nome").value = p.nome || "";
+    document.getElementById("f_insta").value = p.insta || "";
+    document.getElementById("f_zap").value = p.zap || "";
+    document.getElementById("f_id").value = p.id || "";
+  }
+
+  function savePlayer() {
+    if (selected === null) return;
+
+    players[selected] = {
+      nick: document.getElementById("f_nick").value,
+      nome: document.getElementById("f_nome").value,
+      insta: document.getElementById("f_insta").value,
+      zap: document.getElementById("f_zap").value,
+      id: document.getElementById("f_id").value
+    };
+
+    saveStorage();
+    renderList();
+    alert("Dados salvos");
+  }
+
+  function removePlayer() {
+    if (selected === null) return;
+    if (!confirm("Excluir jogador?")) return;
+    players.splice(selected, 1);
+    selected = null;
+    saveStorage();
+    renderList();
+    document.getElementById("details").classList.add("hidden");
+    document.getElementById("empty").style.display = "block";
+  }
+
+  function saveStorage() {
+    localStorage.setItem("players", JSON.stringify(players));
+  }
+
+  renderList();
+</script>
+
+</body>
+</html>
