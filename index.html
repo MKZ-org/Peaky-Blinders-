@@ -3,72 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <title>Guilda – Jogadores</title>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: #fff;
-    }
-    .container {
-      display: flex;
-      height: 100vh;
-    }
-    .sidebar {
-      width: 30%;
-      background: #1c1c1c;
-      padding: 10px;
-      box-sizing: border-box;
-    }
-    .sidebar h2 {
-      margin-top: 0;
-    }
-    .sidebar input {
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 5px;
-      box-sizing: border-box;
-    }
-    .sidebar button {
-      width: 100%;
-      padding: 8px;
-      cursor: pointer;
-    }
-    .player {
-      padding: 8px;
-      background: #2a2a2a;
-      margin-top: 5px;
-      cursor: pointer;
-    }
-    .player:hover {
-      background: #3a3a3a;
-    }
-    .content {
-      width: 70%;
-      padding: 20px;
-      box-sizing: border-box;
-    }
-    .hidden {
-      display: none;
-    }
-    .label {
-      margin-top: 10px;
-      font-weight: bold;
-    }
-    .value {
-      width: 100%;
-      padding: 8px;
-      margin-top: 3px;
-      box-sizing: border-box;
-    }
-    .row {
-      margin-top: 15px;
-    }
-    .row button {
-      padding: 8px 15px;
-      margin-right: 10px;
-      cursor: pointer;
-    }
+    body { margin:0; font-family:Arial; background:#111; color:#fff }
+    .container { display:flex; height:100vh }
+    .sidebar { width:30%; background:#1c1c1c; padding:10px }
+    .player { padding:8px; background:#2a2a2a; margin-top:5px; cursor:pointer }
+    input, button { width:100%; padding:8px; margin-top:5px }
+    .content { width:70%; padding:20px }
+    .hidden { display:none }
   </style>
 </head>
 <body>
@@ -77,110 +24,73 @@
   <div class="sidebar">
     <h2>Jogadores</h2>
     <input id="nick" placeholder="Nick do jogador">
-    <button onclick="addPlayer()">Adicionar jogador</button>
+    <button onclick="addPlayer()">Adicionar</button>
     <div id="list"></div>
   </div>
 
   <div class="content">
-    <div id="empty">Selecione um jogador.</div>
-
     <div id="details" class="hidden">
-      <div class="label">Nick</div>
-      <input id="f_nick" class="value">
-
-      <div class="label">Nome</div>
-      <input id="f_nome" class="value">
-
-      <div class="label">Instagram</div>
-      <input id="f_insta" class="value">
-
-      <div class="label">WhatsApp</div>
-      <input id="f_zap" class="value">
-
-      <div class="label">ID</div>
-      <input id="f_id" class="value">
-
-      <div class="row">
-        <button onclick="savePlayer()">Salvar</button>
-        <button onclick="removePlayer()">Excluir</button>
-      </div>
+      <input id="f_nick" placeholder="Nick">
+      <input id="f_nome" placeholder="Nome">
+      <input id="f_insta" placeholder="Instagram">
+      <input id="f_zap" placeholder="WhatsApp">
+      <input id="f_id" placeholder="ID">
+      <button onclick="savePlayer()">Salvar</button>
     </div>
   </div>
 </div>
 
 <script>
-  let players = JSON.parse(localStorage.getItem("players") || "[]");
-  let selected = null;
+  // 🔴 COLE SUAS CHAVES AQUI
+  const firebaseConfig = {
+    apiKey: "COLE_AQUI",
+    authDomain: "COLE_AQUI",
+    projectId: "COLE_AQUI"
+  };
 
-  function renderList() {
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  let selectedId = null;
+
+  db.collection("players").onSnapshot(snap => {
     const list = document.getElementById("list");
     list.innerHTML = "";
-    players.forEach((p, i) => {
+    snap.forEach(doc => {
+      const d = doc.data();
       const div = document.createElement("div");
       div.className = "player";
-      div.textContent = p.nick;
-      div.onclick = () => selectPlayer(i);
+      div.innerText = d.nick;
+      div.onclick = () => selectPlayer(doc.id, d);
       list.appendChild(div);
     });
-  }
+  });
 
   function addPlayer() {
-    const nick = document.getElementById("nick").value.trim();
-    if (!nick) {
-      alert("Nick obrigatório");
-      return;
-    }
-    players.push({ nick, nome: "", insta: "", zap: "", id: "" });
+    const nick = document.getElementById("nick").value;
+    if (!nick) return;
+    db.collection("players").add({ nick, nome:"", insta:"", zap:"", id:"" });
     document.getElementById("nick").value = "";
-    saveStorage();
-    renderList();
   }
 
-  function selectPlayer(i) {
-    selected = i;
-    const p = players[i];
-    document.getElementById("details").classList.remove("hidden");
-    document.getElementById("empty").style.display = "none";
-
-    document.getElementById("f_nick").value = p.nick || "";
-    document.getElementById("f_nome").value = p.nome || "";
-    document.getElementById("f_insta").value = p.insta || "";
-    document.getElementById("f_zap").value = p.zap || "";
-    document.getElementById("f_id").value = p.id || "";
+  function selectPlayer(id, d) {
+    selectedId = id;
+    details.classList.remove("hidden");
+    f_nick.value = d.nick;
+    f_nome.value = d.nome;
+    f_insta.value = d.insta;
+    f_zap.value = d.zap;
+    f_id.value = d.id;
   }
 
   function savePlayer() {
-    if (selected === null) return;
-
-    players[selected] = {
-      nick: document.getElementById("f_nick").value,
-      nome: document.getElementById("f_nome").value,
-      insta: document.getElementById("f_insta").value,
-      zap: document.getElementById("f_zap").value,
-      id: document.getElementById("f_id").value
-    };
-
-    saveStorage();
-    renderList();
-    alert("Dados salvos");
+    db.collection("players").doc(selectedId).update({
+      nick: f_nick.value,
+      nome: f_nome.value,
+      insta: f_insta.value,
+      zap: f_zap.value,
+      id: f_id.value
+    });
   }
-
-  function removePlayer() {
-    if (selected === null) return;
-    if (!confirm("Excluir jogador?")) return;
-    players.splice(selected, 1);
-    selected = null;
-    saveStorage();
-    renderList();
-    document.getElementById("details").classList.add("hidden");
-    document.getElementById("empty").style.display = "block";
-  }
-
-  function saveStorage() {
-    localStorage.setItem("players", JSON.stringify(players));
-  }
-
-  renderList();
 </script>
 
 </body>
